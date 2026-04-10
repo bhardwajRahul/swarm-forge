@@ -2,18 +2,15 @@
   "from": "architect",
   "to": "e2e-interpreter",
   "status": "pending",
-  "feature": "features/agent-coordination.feature",
-  "summary": "Agent Coordination Workflow - 6 scenarios covering: architect handoff, E2E test generation, coder TDD cycle, parser verification, registry matching, and executor results",
+  "feature": "features/swarmforge-cli.feature",
+  "summary": "SwarmForge CLI - 14 Gherkin scenarios covering Go CLI replacement for bash scripts. Scenarios test: preflight checks, directory setup, helper script generation, agent prompt building, tmux session creation, agent launching, metrics pane, notify subcommand, log subcommand, CLI dispatch, and startup banner.",
   "artifacts": [
-    "features/agent-coordination.feature",
-    "internal/gherkin/model.go",
-    "internal/gherkin/parser.go",
-    "internal/runner/registry.go",
-    "internal/runner/executor.go",
-    "internal/runner/result.go",
-    "internal/handoff/handoff.go",
-    "cmd/gherkin-runner/main.go"
+    "features/swarmforge-cli.feature",
+    "swarmforge.sh",
+    "notify-agent.sh",
+    "swarm-log.sh",
+    "Contitution.md"
   ],
-  "instructions": "Read the feature file at features/agent-coordination.feature. It contains 6 scenarios describing the agent coordination workflow. Your job is to write executable Go acceptance tests that implement these scenarios as step definitions. Create the tests in internal/acceptance/agent_coordination_test.go. Each Gherkin step should map to a step definition function. The tests should use the gherkin parser, runner registry, executor, and handoff packages already built in internal/. After writing the acceptance tests, verify they compile and run (they should fail since not all production code is in place). Then create agent_context/handoff-to-coder.json and notify the Coder agent to begin TDD.",
-  "timestamp": "2026-04-01T12:00:00Z"
+  "instructions": "Read features/swarmforge-cli.feature (14 scenarios). Write executable Go acceptance tests in internal/acceptance/swarmforge_cli_test.go. The tests should verify the behavior described in each scenario using testable interfaces (not real tmux). Key architecture decisions for your tests:\n\n1. INTERFACES TO DEFINE (in test file or in new packages as needed):\n   - tmux.Commander interface: Run(args ...string) error, HasSession(name string) bool\n   - setup.FS interface: MkdirAll(path, perm), WriteFile(path, data, perm), ReadFile(path), Stat(path)\n   - preflight.LookPath function type: func(name string) (string, error)\n   - Use recording stubs (RecordingCommander, FakeFS) to verify correct calls without real tmux/filesystem\n\n2. PACKAGES BEING TESTED (not yet implemented - tests should be RED):\n   - internal/preflight - Check(lookPath, deps...) error\n   - internal/setup - EnsureDirs(fs, root) error, WriteHelperScripts(fs, root) error\n   - internal/banner - Print(w io.Writer)\n   - internal/prompt - Build(cfg AgentConfig, constitution string) string\n   - internal/prompt - roles.go has ArchitectInstructions, CoderInstructions, E2EInterpreterInstructions constants\n   - internal/tmux - CreateSession(cmd, session, window), SplitGrid(cmd, session, window), SetPaneTitles(cmd, session, window), LaunchAgent(cmd, session, pane, name, promptFile, projectRoot)\n   - internal/swarmlog - Logger with Write(role, message) method\n   - internal/notify - Notify(cmd Commander, logger Logger, session, pane, message) error\n   - internal/cli - Dispatch(args, config) error\n   - internal/start - Run(config) error\n\n3. REFERENCE the existing swarmforge.sh to understand exact tmux commands, pane layout, and claude launch commands.\n\n4. After writing acceptance tests, create agent_context/handoff-to-coder.json and notify pane 2.\n\nThe tests MUST compile but FAIL (RED) since production code doesn't exist yet.",
+  "timestamp": "2026-04-10T12:00:00Z"
 }

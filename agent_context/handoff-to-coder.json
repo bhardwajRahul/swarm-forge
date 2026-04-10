@@ -2,18 +2,23 @@
   "from": "e2e-interpreter",
   "to": "coder",
   "status": "pending",
-  "feature": "features/agent-coordination.feature",
-  "summary": "Acceptance tests written for all 6 Gherkin scenarios plus a handoff validation test. Tests are currently RED — they fail to compile because Handoff.Validate() does not exist yet. The Coder must implement a Validate() method on the Handoff struct in internal/handoff/handoff.go that returns an error when From, To, Status, or Feature fields are empty. Once Validate is implemented, all 7 tests should pass (GREEN).",
+  "feature": "features/swarmforge-cli.feature",
+  "summary": "14 acceptance tests written in internal/acceptance/swarmforge_cli_test.go — all RED. Stub packages created with interfaces and unimplemented functions. The Coder must implement each package to make tests pass.",
   "artifacts": [
-    "features/agent-coordination.feature",
-    "internal/acceptance/agent_coordination_test.go",
-    "internal/gherkin/model.go",
-    "internal/gherkin/parser.go",
-    "internal/runner/registry.go",
-    "internal/runner/executor.go",
-    "internal/runner/result.go",
-    "internal/handoff/handoff.go"
+    "features/swarmforge-cli.feature",
+    "internal/acceptance/swarmforge_cli_test.go",
+    "internal/preflight/preflight.go",
+    "internal/setup/setup.go",
+    "internal/banner/banner.go",
+    "internal/prompt/prompt.go",
+    "internal/prompt/roles.go",
+    "internal/tmux/tmux.go",
+    "internal/swarmlog/swarmlog.go",
+    "internal/notify/notify.go",
+    "internal/cli/cli.go",
+    "internal/start/start.go",
+    "swarmforge.sh"
   ],
-  "instructions": "Acceptance tests in internal/acceptance/agent_coordination_test.go are RED. They call h.Validate() on handoff.Handoff which does not exist. Implement Validate() error method on the Handoff struct in internal/handoff/handoff.go. It should return an error if From, To, Status, or Feature are empty strings. Follow TDD: write a unit test first in internal/handoff/handoff_test.go for Validate, then implement. Run mutation testing afterward. All tests must be green before marking complete.",
-  "timestamp": "2026-04-01T12:20:00Z"
+  "instructions": "14 acceptance tests are RED in internal/acceptance/swarmforge_cli_test.go. Stub packages exist with types/interfaces defined but functions returning 'not implemented' errors or empty strings. Follow TDD: for EACH package, write unit tests first, then implement. Reference swarmforge.sh for exact behavior.\n\nPackages to implement (in suggested order):\n1. internal/preflight — Check() iterates deps, calls lookPath, returns first error mentioning the dep name\n2. internal/banner — Print() writes SwarmForge ASCII banner with motto\n3. internal/prompt/roles.go — Fill in ArchitectInstructions, CoderInstructions, E2EInterpreterInstructions constants (copy from swarmforge.sh)\n4. internal/prompt — Build() generates full agent prompt matching swarmforge.sh build_agent_prompt format\n5. internal/setup — EnsureDirs() creates features/logs/agent_context; WriteHelperScripts() writes notify-agent.sh and swarm-log.sh\n6. internal/swarmlog — Logger.Write() formats '[TIMESTAMP] [role] message' and writes to all writers\n7. internal/tmux — CreateSession, SplitGrid, SetPaneTitles, KillSession, LaunchAgent, SendKeys — each calls cmd.Run with correct tmux args (see swarmforge.sh lines 145-189)\n8. internal/notify — Notify() logs '[pane N] message' via logger then calls tmux send-keys\n9. internal/cli — Dispatch() routes 'start'/'notify'/'log' to handlers, returns usage error for empty args\n10. internal/start — Run() orchestrates: check HasSession, kill if exists, create session, split grid, set titles, launch agents, init metrics pane\n\nKey details from swarmforge.sh:\n- tmux new-session -d -s SESSION -n WINDOW\n- split-window -t SESSION:WINDOW.0 -h -p 50, then -t .0 -v -p 50, then -t .2 -v -p 50\n- select-pane -t SESSION:WINDOW.N -T 'Title'\n- pane-border-status top, pane-border-format ' #{pane_title} '\n- claude --append-system-prompt-file PROMPTFILE --permission-mode acceptEdits -n 'SwarmForge NAME'\n- Pane layout: 0=Architect, 1=E2E Interpreter, 2=Coder, 3=Metrics\n\nThe acceptance tests use RecordingCommander and FakeFS stubs (defined in the test file) — your production code must accept the tmux.Commander and setup.FS interfaces.\n\nRun: go test ./internal/acceptance/ -run TestCLI_ -v to verify progress. All 14 must pass.",
+  "timestamp": "2026-04-10T12:30:00Z"
 }
