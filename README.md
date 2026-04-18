@@ -124,3 +124,4 @@ Use these example directories as starting points for project-local `swarmforge/`
 - Inside that project, create a `swarmforge/` directory.
 - Create `swarmforge/swarmforge.conf` and define the windows for your swarm.
 - Use the earlier `Constitution And Roles`, `How It Works`, and `The swarmforge.conf File` sections as the reference for the expected prompt layout, role files, and window definitions.
+- Type `swarmforge`.
