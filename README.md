@@ -4,13 +4,9 @@
 
 ## Intent
 
-SwarmForge exists to solve the core problem of agentic development: **chaos**.
+SwarmForge is an agent coordination system that facilitates communication between agents working in different git worktrees.
 
-Left unchecked, AI agents produce code quickly but often without discipline, leading to brittle, untested, hard-to-maintain software. SwarmForge changes that by embedding **strict professional craftsmanship** directly into the platform.
-
-It enforces four foundational clean code disciplines — plus static linting — as an unbreakable **Constitution**. Every agent in the swarm must obey these rules on every task. The result is fast, scalable, and genuinely high-quality software produced reliably at swarm speed.
-
-SwarmForge turns raw AI coding power into **disciplined, trustworthy engineering**.
+It provides a shared structure for role-specific prompts, worktree assignment, tmux sessions, and message passing so multiple agents can collaborate on the same project without stepping on each other.
 
 ## What SwarmForge Does
 
@@ -36,7 +32,7 @@ SwarmForge is a lightweight, tmux-based orchestration layer that:
 
 ## Constitution And Roles
 
-The recommended prompt layout is:
+In a configuration with an `architect`, `coder`, and `reviewer`, the recommended prompt layout is:
 
 ```text
 swarmforge/
@@ -65,14 +61,14 @@ The default three-agent workflow is:
 
 1. Create a `swarmforge/` directory in the target working directory.
 2. Put `swarmforge.conf`, `constitution.prompt`, and one `<role>.prompt` file per configured role inside it. If needed, add subordinate files under `swarmforge/constitution/`.
-3. Define each window as `window <role> <agent> <worktree>`.
+3. In `swarmforge/swarmforge.conf`, define each window as `window <role> <agent> <worktree>`.
 4. Add `swarmforge.sh` to your shell `PATH` before startup.
 5. Run `swarmforge.sh <working-directory>` or run it from inside that directory.
 6. If the working directory is not already a git repo, startup runs `git init`, renames the initial branch to `master`, writes `.gitignore` entries for `.swarmforge/`, `.worktrees/`, `swarmtools/`, `logs/`, and `agent_context/`, and makes the first commit from the current project state.
 7. Startup creates a git worktree for each window under `.worktrees/<worktree>`, unless the worktree field is `none` or `master`.
 8. Startup creates `swarmtools/notify-agent.sh` for that project.
 9. SwarmForge creates tmux sessions, opens Terminal windows, and launches each configured backend in its assigned worktree.
-10. Roles communicate through helper commands such as `notify-agent.sh` and `swarmlog.sh`.
+10. Roles communicate through helper commands such as `notify-agent.sh`.
 
 ## The `swarmforge.conf` File
 
@@ -112,11 +108,6 @@ In the example above, the agents run in these worktrees:
 
 If a window uses `master` as its worktree name, SwarmForge does not create `.worktrees/master`; that role runs in the main working directory on the `master` branch.
 
-The launcher expects these helper scripts to exist beside `swarmforge.sh`:
-
-- `swarmlog.sh`
-- `swarm-cleanup.sh`
-
 ## Examples
 
 The repository includes example swarm definitions under `examples/`.
@@ -125,58 +116,11 @@ The repository includes example swarm definitions under `examples/`.
 
 Use these example directories as starting points for project-local `swarmforge/` folders.
 
-## Who Is SwarmForge For?
-
-- Developers who want to harness AI agents without sacrificing code quality
-- Teams exploring agentic development practices
-- Anyone tired of “AI wrote it” meaning “now I have to rewrite it”
-- Clean Code enthusiasts who believe discipline still matters in the age of agents
-
 ## Getting Started
 
-```bash
-git clone https://github.com/unclebob/swarmforge.git
-cd swarmforge
-chmod +x swarmforge.sh
-export PATH="/path/to/swarmforge:$PATH"
-mkdir my-project
-cd my-project
-mkdir swarmforge
-cat > swarmforge/swarmforge.conf <<'EOF'
-window architect claude master
-window coder codex coder
-window reviewer codex reviewer
-window logger none none
-EOF
-cat > swarmforge/constitution.prompt <<'EOF'
-This file takes precedence over subordinate files.
-Read and obey the following subordinate documents in order.
-
-1. `swarmforge/constitution/project.prompt`
-2. `swarmforge/constitution/engineering.prompt`
-3. `swarmforge/constitution/workflow.prompt`
-EOF
-mkdir -p swarmforge/constitution
-cat > swarmforge/constitution/project.prompt <<'EOF'
-Add project-specific rules here.
-EOF
-cat > swarmforge/constitution/engineering.prompt <<'EOF'
-Add engineering rules here.
-EOF
-cat > swarmforge/constitution/workflow.prompt <<'EOF'
-Add workflow and handoff rules here.
-EOF
-cat > swarmforge/architect.prompt <<'EOF'
-You are the architect. Read swarmforge/constitution.prompt and follow it.
-EOF
-cat > swarmforge/coder.prompt <<'EOF'
-You are the coder. Read swarmforge/constitution.prompt and follow it.
-EOF
-cat > swarmforge/reviewer.prompt <<'EOF'
-You are the reviewer. Read swarmforge/constitution.prompt and follow it.
-EOF
-swarmforge.sh .
-
-# After startup, the project-local notification helper is available at:
-# ./swarmtools/notify-agent.sh
-```
+- Clone this repository and make `swarmforge.sh` executable.
+- Add the directory containing `swarmforge.sh` to your shell `PATH`.
+- Create or choose the project directory you want SwarmForge to manage.
+- Inside that project, create a `swarmforge/` directory.
+- Create `swarmforge/swarmforge.conf` and define the windows for your swarm.
+- Use the earlier `Constitution And Roles`, `How It Works`, and `The swarmforge.conf File` sections as the reference for the expected prompt layout, role files, and window definitions.
