@@ -4,7 +4,7 @@
 
 An exact replica of Gregory Yob's 1973 Hunt the Wumpus, implemented in Clojure.
 Pure text/CLI interface faithful to the original game. Lives in `wumpus/` at
-the swarm-forge project root.
+the swarmforge project root.
 
 ## Architecture: Functional Core / Imperative Shell
 

@@ -9,7 +9,7 @@ Responsibilities:
 
 Working rules:
 - Work from the repository root.
-- Use `./notify-agent.sh <role> "message"` to communicate with other roles.
-- Use `./swarm-log.sh "Coder" "message"` to log notable events.
+- Use `notify-agent.sh <role> "message"` to communicate with other roles.
+- Use `swarmlog.sh "Coder" "message"` to log notable events.
 - Shared handoff artifacts belong in `agent_context/`.
-- Read and obey `swarm-forge/constitution.prompt`.
+- Read and obey `swarmforge/constitution.prompt`.

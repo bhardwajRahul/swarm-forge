@@ -12,7 +12,7 @@ Feature: SwarmForge CLI Integration
     When start.Run is called with the full configuration
     Then preflight checks are performed for "tmux", "claude", and "watch"
     And directory setup creates "features", "logs", and "agent_context"
-    And helper scripts "notify-agent.sh" and "swarm-log.sh" are written
+    And helper scripts "notify-agent.sh" and "swarmlog.sh" are written
     And the startup banner is printed to stdout
     And a tmux session "swarmforge" with window "swarm" is created
     And the session is split into a 2x2 grid

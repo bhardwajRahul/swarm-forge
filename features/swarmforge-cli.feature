@@ -1,7 +1,7 @@
 Feature: SwarmForge CLI
 
   The swarmforge CLI replaces the bash startup scripts (swarmforge.sh,
-  notify-agent.sh, swarm-log.sh) with a single Go binary. Running
+  notify-agent.sh, swarmlog.sh) with a single Go binary. Running
   "swarmforge start" performs preflight checks, creates project
   directories, builds agent prompts, and launches a tmux session with
   three AI agents and a metrics dashboard.
@@ -27,7 +27,7 @@ Feature: SwarmForge CLI
     Given a project root directory exists
     When setup writes helper scripts to the project root
     Then "notify-agent.sh" exists under the project root
-    And "swarm-log.sh" exists under the project root
+    And "swarmlog.sh" exists under the project root
 
   Scenario: Agent prompt includes role and constitution
     Given a constitution with content "Rule 1: TDD is mandatory"
@@ -42,7 +42,7 @@ Feature: SwarmForge CLI
     And the agent role is "Coder" with standard instructions
     When the prompt builder generates the prompt
     Then the prompt contains "notify-agent.sh"
-    And the prompt contains "swarm-log.sh"
+    And the prompt contains "swarmlog.sh"
     And the prompt contains "agent_context/"
 
   Scenario: Start kills existing tmux session before creating new one
