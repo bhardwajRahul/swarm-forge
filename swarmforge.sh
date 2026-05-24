@@ -199,7 +199,7 @@ parse_config() {
     fi
 
     case "$agent" in
-      claude|codex|none) ;;
+      claude|codex) ;;
       *)
         echo -e "${RED}Error:${RESET} Unsupported agent '$agent' for role '$role'"
         exit 1
@@ -282,7 +282,6 @@ find_project_dir() {
 
 PROJECT_DIR="$(find_project_dir)"
 SESSIONS_FILE="$PROJECT_DIR/.swarmforge/sessions.tsv"
-LOG_FILE="$PROJECT_DIR/logs/agent_messages.log"
 
 if [[ $# -lt 2 ]]; then
   echo "Usage: notify-agent.sh <target-role-or-index> \"message\"" >&2
@@ -314,9 +313,6 @@ TARGET_SESSION=$(resolve_session "$1") || {
 }
 
 MESSAGE="${*:2}"
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-mkdir -p "$PROJECT_DIR/logs"
-echo "[$TIMESTAMP] [$TARGET_SESSION] $MESSAGE" >> "$LOG_FILE"
 tmux send-keys -t "${TARGET_SESSION}:0.0" -l -- "$MESSAGE"
 sleep 0.15
 tmux send-keys -t "${TARGET_SESSION}:0.0" C-m
@@ -407,15 +403,6 @@ launch_role() {
   local role_worktree="${WORKTREE_PATHS[$index]}"
   local prompt_file="$PROMPTS_DIR/${role}.md"
   local launch_cmd=""
-
-  if [[ "$agent" == "none" ]]; then
-    if [[ "$role" == "logger" ]]; then
-      tmux send-keys -t "${session}:${display}.0" \
-        "cd '$WORKING_DIR' && touch logs/agent_messages.log && tail -f logs/agent_messages.log" Enter
-    fi
-    echo -e "  ${CYAN}[${display}]${RESET} opened without agent backend"
-    return
-  fi
 
   write_agent_instruction_file "$role" "$prompt_file"
 
