@@ -90,17 +90,37 @@ You can define as many windows as your project needs. Each `role` maps to a corr
 
 This lets each project choose its own swarm shape instead of being locked to a fixed set of roles.
 
-The first window in the config is the cleanup window. SwarmForge attaches shutdown cleanup to that window's launch command and falls back to that tmux session when Terminal automation is unavailable.
+The first window in the config is the cleanup window. SwarmForge attaches shutdown cleanup to that window's launch command and falls back to that tmux session when no trackable terminal backend is available.
 
-When SwarmForge opens Terminal windows, it also starts a small window watchdog:
+When SwarmForge opens trackable terminal windows or tabs, it also starts a small window watchdog:
 
-- Closing a non-cleanup Terminal window reopens that window attached to the same tmux session.
-- Closing the cleanup Terminal window shuts down all configured tmux sessions and closes the remaining tracked Terminal windows.
+- Closing a non-cleanup terminal surface reopens that surface attached to the same tmux session.
+- Closing the cleanup terminal surface shuts down all configured tmux sessions and closes the remaining tracked surfaces.
 - The watchdog updates `.swarmforge/window-ids` when it reopens a window so shutdown cleanup still targets the current windows.
 
 ## tmux Behavior
 
 SwarmForge uses a project-specific tmux socket recorded in `.swarmforge/tmux-socket`, so each project swarm is isolated from other tmux sessions. It also honors tmux `base-index` and `pane-base-index` settings when launching agents and sending notifications, so configurations that number windows or panes from `1` work without requiring users to change their tmux preferences.
+
+## Terminal Behavior
+
+SwarmForge opens trackable terminal windows or tabs through a small terminal backend adapter.
+
+Default detection:
+
+- If AppleScript is available, SwarmForge opens macOS Terminal.app windows.
+- Otherwise, SwarmForge attaches the cleanup tmux session in the current shell.
+
+Set `SWARMFORGE_TERMINAL` to override detection:
+
+```sh
+SWARMFORGE_TERMINAL=ghostty swarm
+SWARMFORGE_TERMINAL=terminal-app swarm
+SWARMFORGE_TERMINAL=none swarm
+```
+
+Use `ghostty` when you want SwarmForge to open Ghostty tabs instead of the default Terminal.app windows.
+Use `none` when you want SwarmForge to skip terminal automation and attach the cleanup tmux session in the current shell.
 
 Example config:
 

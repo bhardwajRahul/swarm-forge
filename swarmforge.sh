@@ -30,6 +30,7 @@ PROJECT_SOCKET_ID="$(printf '%s' "$WORKING_DIR" | cksum)"
 PROJECT_SOCKET_ID="${PROJECT_SOCKET_ID%% *}"
 TMUX_SOCKET="$TMUX_SOCKET_DIR/$PROJECT_SOCKET_ID.sock"
 TMUX_SOCKET_FILE="$STATE_DIR/tmux-socket"
+TERMINAL_BACKEND=""
 
 typeset -a ROLES=()
 typeset -a AGENTS=()
@@ -161,6 +162,8 @@ initialize_git_repo() {
 has_command() {
   command -v "$1" &>/dev/null
 }
+
+source "$SCRIPT_DIR/swarm-terminal-adapter.sh"
 
 remove_nonessential_clone_files() {
   if [[ "${WORKING_DIR:t}" == "swarm-forge" ]]; then
@@ -301,7 +304,7 @@ write_sessions_file() {
 
 check_helper_scripts() {
   local helper
-  for helper in swarm-cleanup.sh swarm-window-watchdog.sh swarmlog.sh; do
+  for helper in swarm-cleanup.sh swarm-window-watchdog.sh swarm-terminal-adapter.sh swarmlog.sh; do
     if [[ ! -x "$SCRIPT_DIR/$helper" ]]; then
       echo -e "${RED}Error:${RESET} Required helper script not found or not executable: $SCRIPT_DIR/$helper"
       exit 1
@@ -523,7 +526,7 @@ launch_role() {
   esac
 
   if [[ "$index" -eq "${CLEANUP_OWNER_INDEX}" ]]; then
-    launch_cmd="${launch_cmd}; exit_code=\$?; nohup '$SCRIPT_DIR/swarm-cleanup.sh' '$TMUX_SOCKET' '$WINDOW_IDS_FILE'"
+    launch_cmd="${launch_cmd}; exit_code=\$?; SWARMFORGE_TERMINAL_BACKEND='$TERMINAL_BACKEND' nohup '$SCRIPT_DIR/swarm-cleanup.sh' '$TMUX_SOCKET' '$WINDOW_IDS_FILE'"
     local session_name
     for session_name in "${SESSIONS[@]}"; do
       [[ -n "$session_name" ]] || continue
@@ -537,20 +540,6 @@ launch_role() {
     send_initial_grok_prompt "$session" "$display" "$prompt_file"
   fi
   echo -e "  ${CYAN}[${display}]${RESET} started in session ${session}"
-}
-
-open_terminal_window() {
-  local session="$1"
-  local title="$2"
-  osascript <<EOF
-tell application "Terminal"
-  activate
-  set newTab to do script ""
-  do script "cd '$WORKING_DIR' && exec tmux -S '$TMUX_SOCKET' attach-session -t '${session}'" in newTab
-  set custom title of newTab to "${title}"
-  return id of front window
-end tell
-EOF
 }
 
 choose_cleanup_owner() {
@@ -568,6 +557,7 @@ check_backend_dependencies
 prepare_workspace
 prepare_worktrees
 choose_cleanup_owner
+TERMINAL_BACKEND="$(detect_terminal_backend)"
 
 local_session=""
 for local_session in "${SESSIONS[@]}"; do
@@ -607,26 +597,29 @@ echo -e "${GREEN}Tip: Use $WORKING_DIR/swarmtools/notify-agent.sh <role-or-index
 echo -e "${GREEN}Tip: Reattach manually with 'tmux -S $TMUX_SOCKET attach-session -t <session-name>' if needed.${RESET}"
 echo ""
 
-if has_command osascript; then
-  echo -e "Opening separate Terminal windows for each session..."
+if terminal_backend_tracks_windows; then
+  echo -e "Opening separate $(terminal_backend_label) surfaces for each session..."
   : > "$WINDOW_IDS_FILE"
   : > "$WINDOW_STATE_FILE"
+  previous_window_id=""
   for (( i = 1; i <= ${#ROLES[@]}; i++ )); do
-    window_id="$(open_terminal_window "${SESSIONS[$i]}" "SwarmForge ${DISPLAY_NAMES[$i]}")"
+    window_id="$(terminal_open_session "${SESSIONS[$i]}" "SwarmForge ${DISPLAY_NAMES[$i]}" "$previous_window_id")"
     echo "$window_id" >> "$WINDOW_IDS_FILE"
     printf '%s\t%s\t%s\t%s\n' \
       "$i" \
       "$window_id" \
       "${SESSIONS[$i]}" \
       "SwarmForge ${DISPLAY_NAMES[$i]}" >> "$WINDOW_STATE_FILE"
+    previous_window_id="$window_id"
   done
   nohup "$SCRIPT_DIR/swarm-window-watchdog.sh" \
     "$WINDOW_STATE_FILE" \
     "$WINDOW_IDS_FILE" \
     "$CLEANUP_OWNER_INDEX" \
     "$TMUX_SOCKET" \
-    "$WORKING_DIR" > "$WINDOW_WATCHDOG_LOG" 2>&1 &
+    "$WORKING_DIR" \
+    "$TERMINAL_BACKEND" > "$WINDOW_WATCHDOG_LOG" 2>&1 &
 else
-  echo -e "${YELLOW}osascript not found; attaching current shell to '${SESSIONS[$CLEANUP_OWNER_INDEX]}' instead.${RESET}"
+  echo -e "${YELLOW}No trackable terminal backend found; attaching current shell to '${SESSIONS[$CLEANUP_OWNER_INDEX]}' instead.${RESET}"
   tmux -S "$TMUX_SOCKET" attach-session -t "${SESSIONS[$CLEANUP_OWNER_INDEX]}"
 fi

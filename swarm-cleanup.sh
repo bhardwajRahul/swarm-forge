@@ -8,8 +8,17 @@ fi
 
 TMUX_SOCKET="$1"
 WINDOW_IDS_FILE="$2"
+TERMINAL_BACKEND="${SWARMFORGE_TERMINAL_BACKEND:-terminal-app}"
+WORKING_DIR="$(cd "$(dirname "$WINDOW_IDS_FILE")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 shift
 shift
+
+has_command() {
+  command -v "$1" &>/dev/null
+}
+
+source "$SCRIPT_DIR/swarm-terminal-adapter.sh"
 
 for session in "$@"; do
   tmux -S "$TMUX_SOCKET" kill-session -t "$session" 2>/dev/null || true
@@ -20,11 +29,6 @@ sleep 1
 if [[ -f "$WINDOW_IDS_FILE" ]]; then
   while IFS= read -r window_id; do
     [[ -n "$window_id" ]] || continue
-    osascript \
-      -e 'tell application "Terminal"' \
-      -e 'try' \
-      -e 'close (first window whose id is '"$window_id"') saving no' \
-      -e 'end try' \
-      -e 'end tell' >/dev/null 2>&1 || true
+    terminal_close_window "$window_id"
   done < "$WINDOW_IDS_FILE"
 fi
