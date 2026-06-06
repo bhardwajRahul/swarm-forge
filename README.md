@@ -64,8 +64,8 @@ The default three-agent workflow is:
 1. Create a `swarmforge/` directory in the target working directory.
 2. Put `swarmforge.conf`, `constitution.prompt`, and one `<role>.prompt` file per configured role inside it. If needed, add subordinate files under `swarmforge/constitution/`.
 3. In `swarmforge/swarmforge.conf`, define each window as `window <role> <agent> <worktree>`.
-4. Add `swarmforge.sh` to your shell `PATH` before startup.
-5. Run `swarmforge.sh <working-directory>` or run it from inside that directory.
+4. Add `swarmforge/swarmforge.sh` to your shell `PATH` before startup.
+5. Run `swarmforge.sh <working-directory>` from your shell path, or run `./swarm` from inside that directory.
 6. If the working directory is not already a git repo, startup runs `git init`, renames the initial branch to `master`, writes `.gitignore` entries for `.swarmforge/`, `.worktrees/`, `swarmtools/`, `logs/`, and `agent_context/`, and makes the first commit from the current project state.
 7. Startup creates a git worktree for each window under `.worktrees/<worktree>`, unless the worktree field is `none` or `master`.
 8. Startup creates `swarmtools/notify-agent.sh` for that project.
@@ -181,7 +181,7 @@ SWARMFORGE_TERMINAL=wezterm ./swarm
 
 If the terminal can open sessions but cannot return stable ids for open/check/close, keep `terminal_backend_can_open_sessions` as `return 0` and set `terminal_backend_tracks_windows` to `return 1`. SwarmForge will open one surface per session and skip the watchdog for that backend. `swarmforge/terminal-adapters/windows-terminal.sh` is an example of this launch-only style.
 
-If the backend cannot open sessions at all, set both capability functions to `return 1`; SwarmForge will attach the cleanup tmux session in the current shell. Only edit `swarm-terminal-adapter.sh` when adding aliases or changing default auto-detection.
+If the backend cannot open sessions at all, set both capability functions to `return 1`; SwarmForge will attach the cleanup tmux session in the current shell. Only edit `swarmforge/swarm-terminal-adapter.sh` when adding aliases or changing default auto-detection.
 
 Example config:
 
