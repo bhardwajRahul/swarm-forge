@@ -299,7 +299,7 @@ write_sessions_file() {
 
 check_helper_scripts() {
   local helper
-  for helper in notify-agent.sh swarm-cleanup.sh swarm-window-watchdog.sh swarm-terminal-adapter.sh swarmlog.sh; do
+  for helper in notify-agent.sh swarm-cleanup.sh swarm-window-watchdog.sh swarm-terminal-adapter.sh; do
     if [[ ! -x "$SCRIPT_DIR/$helper" ]]; then
       echo -e "${RED}Error:${RESET} Required helper script not found or not executable: $SCRIPT_DIR/$helper"
       exit 1

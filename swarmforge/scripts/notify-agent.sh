@@ -23,7 +23,6 @@ find_project_dir() {
 PROJECT_DIR="$(find_project_dir)"
 SESSIONS_FILE="$PROJECT_DIR/.swarmforge/sessions.tsv"
 TMUX_SOCKET_FILE="$PROJECT_DIR/.swarmforge/tmux-socket"
-LOG_FILE="$PROJECT_DIR/logs/agent_messages.log"
 
 if [[ ! -f "$TMUX_SOCKET_FILE" ]]; then
   echo "Tmux socket file not found: $TMUX_SOCKET_FILE" >&2
@@ -85,10 +84,6 @@ if [[ "${1:-}" == "--file" ]]; then
 else
   MESSAGE="$*"
 fi
-
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-mkdir -p "$PROJECT_DIR/logs"
-echo "[$TIMESTAMP] [$TARGET_SESSION] $MESSAGE" >> "$LOG_FILE"
 
 tmux -S "$TMUX_SOCKET" send-keys -t "${TARGET_SESSION}:${TMUX_WINDOW_BASE_INDEX}.${TMUX_PANE_BASE_INDEX}" -l -- "$MESSAGE"
 sleep 0.15
