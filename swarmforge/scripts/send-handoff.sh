@@ -54,6 +54,20 @@ if [[ -z "$BODY_FILE" || ! -f "$BODY_FILE" ]]; then
   exit 1
 fi
 
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "Cannot determine handoff branch and commit: not inside a git worktree" >&2
+  exit 1
+fi
+
+BRANCH_NAME="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+if [[ -z "$BRANCH_NAME" ]]; then
+  BRANCH_NAME="HEAD"
+fi
+COMMIT_HASH="$(git rev-parse --short=10 HEAD 2>/dev/null)" || {
+  echo "Cannot determine handoff commit hash" >&2
+  exit 1
+}
+
 SENDER="$(handoff_role_or_default "$SENDER_ARG")"
 STREAM="${SENDER}-${TARGET}"
 SEQUENCE="$(handoff_next_sequence "$STREAM")"
@@ -66,6 +80,8 @@ message id: $MESSAGE_ID
 sender role: $SENDER
 target role: $TARGET
 message sequence: $SEQUENCE
+branch name: $BRANCH_NAME
+commit hash: $COMMIT_HASH
 
 $BODY
 EOF

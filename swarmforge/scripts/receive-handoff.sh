@@ -68,6 +68,21 @@ if ! handoff_valid_message_id "$MESSAGE_ID"; then
   exit 2
 fi
 
+if [[ "$MESSAGE_TYPE" == "handoff" ]]; then
+  BRANCH_NAME="$(handoff_field "branch name" "$MESSAGE_FILE")" || {
+    echo "Missing branch name" >&2
+    exit 2
+  }
+  COMMIT_HASH="$(handoff_field "commit hash" "$MESSAGE_FILE")" || {
+    echo "Missing commit hash" >&2
+    exit 2
+  }
+  if [[ "$COMMIT_HASH" != [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f] ]]; then
+    echo "Invalid commit hash: $COMMIT_HASH" >&2
+    exit 2
+  fi
+fi
+
 STREAM="${SENDER}-${TARGET}"
 seq_num="$(handoff_sequence_number "$SEQUENCE")"
 last_file="$(handoff_last_received_file "$STREAM")"

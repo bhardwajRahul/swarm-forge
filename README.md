@@ -167,9 +167,13 @@ message id: YYYYMMDD-HHMMSS-XXXXXX
 sender role: sender
 target role: target
 message sequence: NNNNNN
+branch name: sender-branch
+commit hash: 1234567890
 ```
 
 The `message id` timestamp is human-readable and roughly sortable. Message type, sender, target, and sequence are separate fields so the id does not duplicate protocol data. Sequence numbers are per sender-target stream. For example, `coder-cleaner` has its own sequence, and `cleaner-coder` has a separate reverse sequence. The six-character suffix prevents id collisions when two messages are created in the same second.
+
+The helper reads `branch name` and the 10-character `commit hash` from the sender's current git worktree at send time. Agents should commit the state being handed off, send the handoff immediately, and avoid making another commit until `notify-agent.sh send` completes successfully. The generated branch and commit fields are the authoritative state for the receiver to merge.
 
 The sender archives each outbound message under:
 
@@ -209,6 +213,8 @@ message id: YYYYMMDD-HHMMSS-XXXXXX
 sender role: receiver
 target role: original-sender
 message sequence: NNNNNN
+branch name: receiver-branch
+commit hash: 1234567890
 resend stream: original-sender-receiver
 resend sequences: 000003-000005
 ```
