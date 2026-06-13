@@ -24,7 +24,7 @@ WINDOW_STATE_FILE="$STATE_DIR/windows.tsv"
 WINDOW_WATCHDOG_LOG="$STATE_DIR/window-watchdog.log"
 SESSIONS_FILE="$STATE_DIR/sessions.tsv"
 PROMPTS_DIR="$STATE_DIR/prompts"
-TMUX_SOCKET_DIR="$STATE_DIR/tmux"
+TMUX_SOCKET_DIR="/private/tmp/swarmforge-${UID}"
 PROJECT_SOCKET_ID="$(printf '%s' "$WORKING_DIR" | cksum)"
 PROJECT_SOCKET_ID="${PROJECT_SOCKET_ID%% *}"
 TMUX_SOCKET="$TMUX_SOCKET_DIR/$PROJECT_SOCKET_ID.sock"
@@ -326,14 +326,11 @@ sync_worktree_scripts() {
 
     role_scripts_dir="$worktree_path/swarmforge/scripts"
     role_state_dir="$worktree_path/.swarmforge"
-    role_socket_dir="$role_state_dir/tmux"
-    role_socket="$role_socket_dir/${TMUX_SOCKET:t}"
     mkdir -p "$role_scripts_dir"
     cp -R "$SCRIPT_DIR/." "$role_scripts_dir/"
-    mkdir -p "$role_state_dir" "$role_socket_dir"
-    ln -sf "$TMUX_SOCKET" "$role_socket"
+    mkdir -p "$role_state_dir"
     cp "$SESSIONS_FILE" "$role_state_dir/sessions.tsv"
-    printf '%s\n' "$role_socket" > "$role_state_dir/tmux-socket"
+    cp "$TMUX_SOCKET_FILE" "$role_state_dir/tmux-socket"
   done
 }
 
