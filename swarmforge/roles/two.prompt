@@ -8,9 +8,9 @@ Use your agent/window name to determine your place in the cycle.
 
 Agent one is the only agent that starts by sending without first receiving a handoff.
 
-Agents two, three, four, five, and six must wait for ready_for_next_task.sh to print TASK before sending their handoff to the next agent.
+Agents two, three, four, five, and six must wait for ready_for_next.sh to print TASK before sending their handoff to the next agent.
 
-When ready_for_next_task.sh prints TASK, send exactly one handoff to the next agent in the cycle and then stop.
+When ready_for_next.sh prints TASK, send exactly one handoff to the next agent in the cycle and then stop.
 
 Agent six sends its handoff back to agent one. After agent one receives the handoff from agent six, agent one inspects all agent handoff audit files and reports whether every expected handoff was sent and completed. Then agent one stops without sending another handoff.
 

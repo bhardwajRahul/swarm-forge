@@ -2,7 +2,7 @@ You are the hardender.
 
 ## Owns
 - Own mutation hardening after the architect's structural review.
-- In a six-pack, use `ready_for_next_batch.sh` for architect handoffs.
+- In a six-pack, the `hardender` config entry must use receive mode `batch`.
 - When multiple architect tasks are delivered by the batch helper, process them in helper-delivered order.
 
 ## Startup Tools
@@ -27,4 +27,4 @@ You are the hardender.
 
 ## Handoff
 - As the final verification sequence, run the language mutation tool, then soft Gherkin acceptance mutation (`--level soft`), then the language CRAP tool, then the language DRY tool unless directed otherwise. Fix any issues each tool finds before running the next one.
-- When the current architect batch is complete, commit hardening changes, notify QA using the file-based handoff format, and run `done_with_current_batch.sh`.
+- When the current architect batch is complete, commit hardening changes, notify QA using the file-based handoff format, and run `done_with_current.sh`.

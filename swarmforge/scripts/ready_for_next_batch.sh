@@ -15,7 +15,7 @@ in_process_batches=("$IN_PROCESS_DIR"/batch_*(N/))
 in_process_files=("$IN_PROCESS_DIR"/*.handoff(N))
 
 if (( ${#in_process_files[@]} > 0 )); then
-  echo "TASK_IN_PROCESS_IS_SINGLE: use ready_for_next_task.sh or done_with_current_task.sh." >&2
+  echo "TASK_IN_PROCESS_IS_SINGLE: use ready_for_next.sh or done_with_current.sh." >&2
   for file in "${in_process_files[@]}"; do
     echo "- $file" >&2
   done

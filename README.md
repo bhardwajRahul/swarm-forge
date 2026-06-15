@@ -14,14 +14,9 @@ notifications through tmux.
 Agents interact with handoffs through helper scripts:
 
 - `swarm_handoff.sh <draft-file>` validates and queues outbound handoffs.
-- `ready_for_next_task.sh` accepts the next available task and prints its
-  sender, type, priority, and payload.
-- `done_with_current_task.sh` completes the current task and then delegates to
-  `ready_for_next_task.sh`.
-- `ready_for_next_batch.sh` accepts all queued tasks at the next available
-  priority as one explicit batch.
-- `done_with_current_batch.sh` completes the current batch and then delegates to
-  `ready_for_next_batch.sh`.
+- `ready_for_next.sh` accepts work using the role's configured receive mode.
+- `done_with_current.sh` completes the current task or batch using the role's
+  configured receive mode.
 
 The durable handoff files and their audit timestamps replace the old logbook and
 direct tmux handoff strategy. See [swarmforge/handoff-protocol.md](swarmforge/handoff-protocol.md)

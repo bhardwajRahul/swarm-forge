@@ -64,6 +64,22 @@ handoff_role_worktree_name() {
   awk -F '\t' -v role="$role" '$1 == role { print $2; found = 1 } END { exit !found }' "$roles_file"
 }
 
+handoff_role_receive_mode() {
+  local role="$1" roles_file
+  roles_file="$(handoff_roles_file)" || return 1
+  awk -F '\t' -v role="$role" '
+    $1 == role {
+      if ($7 == "") {
+        print "task"
+      } else {
+        print $7
+      }
+      found = 1
+    }
+    END { exit !found }
+  ' "$roles_file"
+}
+
 handoff_timestamp() {
   date -u '+%Y-%m-%dT%H:%M:%SZ'
 }

@@ -13,7 +13,7 @@ mkdir -p "$IN_PROCESS_DIR" "$COMPLETED_DIR"
 in_process_batches=("$IN_PROCESS_DIR"/batch_*(N/))
 in_process_files=("$IN_PROCESS_DIR"/*.handoff(N))
 if (( ${#in_process_batches[@]} > 0 )); then
-  echo "CURRENT_WORK_IS_BATCH: use done_with_current_batch.sh." >&2
+  echo "CURRENT_WORK_IS_BATCH: use done_with_current.sh." >&2
   for batch_dir in "${in_process_batches[@]}"; do
     echo "- $batch_dir" >&2
   done

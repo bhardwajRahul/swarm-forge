@@ -8,7 +8,7 @@
 - `five` sends to `six`.
 - `six` sends to `one`.
 - `one` is the only agent that starts by sending without first receiving a handoff.
-- `two`, `three`, `four`, `five`, and `six` must wait to receive a task from `ready_for_next_task.sh` before sending their handoff to the next agent.
+- `two`, `three`, `four`, `five`, and `six` must wait to receive a task from `ready_for_next.sh` before sending their handoff to the next agent.
 - After `one` receives the handoff from `six`, `one` inspects handoff audit files and reports whether every expected handoff was sent and completed.
 - After reporting status, `one` stops without sending another handoff.
 

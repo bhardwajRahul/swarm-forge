@@ -41,6 +41,21 @@ The daemon consumes `outbox/`. Agents consume `inbox/new/` through helper
 scripts. The `sent`, `failed`, `in_process`, and `completed` directories provide
 the audit trail and restart state.
 
+## Role Receive Mode
+
+`swarmforge.conf` window lines may include an optional receive mode:
+
+```text
+window <role> <agent> <worktree> [task|batch]
+```
+
+When omitted, receive mode defaults to `task`. The launcher writes the
+normalized mode into `.swarmforge/roles.tsv`, and agent-facing receive helpers
+read that runtime file rather than reparsing `swarmforge.conf`.
+
+Use `batch` for roles that should consume equal-priority queued handoffs as a
+single unit, such as six-pack `hardender` and four-pack `architect`.
+
 ## Filename Format
 
 Handoff filenames should sort by priority, timestamp, and sequence:
@@ -302,13 +317,33 @@ recipient toward one file and should force queue-order processing.
 Example tmux wake-up:
 
 ```text
-You have new handoff mail. If idle, follow your role's receiving rule and run the appropriate ready helper.
+You have new handoff mail. If idle, run ready_for_next.sh.
 ```
 
 ## Queue Helper Scripts
 
 Agents should not manually move inbox files. Helper scripts should own queue
 state transitions.
+
+### `ready_for_next.sh`
+
+Responsibilities:
+
+- Run inside one agent worktree.
+- Read the current role from `SWARMFORGE_ROLE`.
+- Read that role's receive mode from `.swarmforge/roles.tsv`.
+- Dispatch to `ready_for_next_task.sh` for `task` mode.
+- Dispatch to `ready_for_next_batch.sh` for `batch` mode.
+
+### `done_with_current.sh`
+
+Responsibilities:
+
+- Run inside one agent worktree.
+- Read the current role from `SWARMFORGE_ROLE`.
+- Read that role's receive mode from `.swarmforge/roles.tsv`.
+- Dispatch to `done_with_current_task.sh` for `task` mode.
+- Dispatch to `done_with_current_batch.sh` for `batch` mode.
 
 ### `ready_for_next_task.sh`
 
@@ -418,28 +453,25 @@ NO_TASK
 
 Prompts should instruct agents to follow this loop:
 
-1. When notified, run the ready helper required by your role.
-2. Use `ready_for_next_task.sh` by default.
-3. Use `ready_for_next_batch.sh` when the user, role prompt, or constitution
-   explicitly directs batch processing.
-4. If it prints `NO_TASK`, stop waiting for work.
-5. If it prints `TASK: <path>`, treat the printed `PAYLOAD` as the task.
-6. If it prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as part of the
+1. When notified, run `ready_for_next.sh`.
+2. Let `ready_for_next.sh` dispatch according to the receive mode configured for
+   your role.
+3. If it prints `NO_TASK`, stop waiting for work.
+4. If it prints `TASK: <path>`, treat the printed `PAYLOAD` as the task.
+5. If it prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as part of the
    current batch in helper-delivered order.
-7. Use only the task information printed by the helper scripts.
-8. If a tmux wake-up arrives while already working on a task, ignore it.
-9. When the task is fully complete, run `done_with_current_task.sh`.
-10. When a batch is fully complete, run `done_with_current_batch.sh`.
-11. Treat `note` handoffs as tasks too; after reading or acting on a note, run
-   `done_with_current_task.sh` before accepting any other handoff.
-12. If a done helper prints `TASK: <path>`, treat the printed `PAYLOAD` as the
+6. Use only the task information printed by the helper scripts.
+7. If a tmux wake-up arrives while already working on a task, ignore it.
+8. When the task or batch is fully complete, run `done_with_current.sh`.
+9. Treat `note` handoffs as tasks too; after reading or acting on a note, run
+   `done_with_current.sh` before accepting any other handoff.
+10. If a done helper prints `TASK: <path>`, treat the printed `PAYLOAD` as the
    next task.
-13. If a done helper prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as
+11. If a done helper prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as
    part of the next batch in helper-delivered order.
-14. If a done helper prints `NO_TASK`, stop waiting for work.
+12. If a done helper prints `NO_TASK`, stop waiting for work.
 
-On restart, an agent should run the ready helper required by its role and follow
-its output.
+On restart, an agent should run `ready_for_next.sh` and follow its output.
 
 Tmux wake-ups are intentionally lossy. They only prompt an idle agent to check
 its durable inbox. A busy agent can ignore them because task completion also
@@ -514,6 +546,10 @@ Delivery should be transaction-like:
 The current daemon-backed protocol uses these helper scripts:
 
 - `swarm_handoff.sh` validates and queues outbound handoff drafts.
+- `ready_for_next.sh` dispatches to the correct ready helper for the current
+  role's configured receive mode.
+- `done_with_current.sh` dispatches to the correct done helper for the current
+  role's configured receive mode.
 - `ready_for_next_task.sh` accepts or resumes one current task.
 - `done_with_current_task.sh` completes one current task.
 - `ready_for_next_batch.sh` accepts or resumes one current batch.
