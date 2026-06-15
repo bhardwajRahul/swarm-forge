@@ -151,6 +151,9 @@ change; the role should complete the inbound task instead.
 
 Used for one short freeform message.
 
+Agents should not send `note` handoffs unless the user, role prompt,
+constitution, or current task explicitly directs them to send one.
+
 Draft:
 
 ```text
@@ -326,6 +329,7 @@ Responsibilities:
 
 - Run inside one agent worktree.
 - Require exactly one file in `inbox/in_process/`.
+- Refuse to run if `inbox/in_process/` contains a batch directory.
 - Add or update `completed_at`.
 - Move the file to `inbox/completed/`.
 - Print the completed task path.
@@ -337,6 +341,40 @@ Responsibilities:
 `ready_for_next_task.sh` should remain the single owner of checking
 `inbox/in_process/`, selecting the next sorted `inbox/new/` item, moving it to
 `inbox/in_process/`, adding `dequeued_at`, and printing `TASK` or `NO_TASK`.
+
+### `ready_for_next_batch.sh`
+
+Responsibilities:
+
+- Run inside one agent worktree.
+- Check `inbox/in_process/` first.
+- If an in-process batch exists, print that batch.
+- Refuse to run if a single in-process task exists.
+- If no in-process work exists, select the first file in `inbox/new/` by sorted
+  filename order.
+- Select every queued handoff with the same priority as that first file.
+- Move those files into one `inbox/in_process/batch_<timestamp>_<suffix>/`
+  directory.
+- Add or update `dequeued_at` on each selected file.
+- Print the accepted batch path, count, priority, and each task payload in
+  helper-delivered order.
+- Print `NO_TASK` if no inbox item is available.
+- Refuse ambiguous states, such as multiple in-process batches, unless an
+  explicit repair is made outside the helper.
+
+### `done_with_current_batch.sh`
+
+Responsibilities:
+
+- Run inside one agent worktree.
+- Require exactly one batch directory in `inbox/in_process/`.
+- Refuse to run if `inbox/in_process/` contains a single task file.
+- Add or update `completed_at` on each file in the batch.
+- Move the batch directory to `inbox/completed/`.
+- Print the completed task paths and completed batch path.
+- Call `ready_for_next_batch.sh` after completion and pass through its output.
+- Refuse to run if there are zero or multiple in-process batches, unless an
+  explicit repair is made outside the helper.
 
 Example success:
 
@@ -364,16 +402,23 @@ NO_TASK
 Prompts should instruct agents to follow this loop:
 
 1. When notified, run `ready_for_next_task.sh`.
-2. If it prints `NO_TASK`, stop waiting for work.
-3. If it prints `TASK: <path>`, treat the printed `PAYLOAD` as the task.
-4. Use only the task information printed by the helper scripts.
-5. If a tmux wake-up arrives while already working on a task, ignore it.
-6. When the task is fully complete, run `done_with_current_task.sh`.
-7. Treat `note` handoffs as tasks too; after reading or acting on a note, run
+2. Use `ready_for_next_batch.sh` only when the user, role prompt,
+   constitution, or current task explicitly directs batch processing.
+3. If it prints `NO_TASK`, stop waiting for work.
+4. If it prints `TASK: <path>`, treat the printed `PAYLOAD` as the task.
+5. If it prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as part of the
+   current batch in helper-delivered order.
+6. Use only the task information printed by the helper scripts.
+7. If a tmux wake-up arrives while already working on a task, ignore it.
+8. When the task is fully complete, run `done_with_current_task.sh`.
+9. When a batch is fully complete, run `done_with_current_batch.sh`.
+10. Treat `note` handoffs as tasks too; after reading or acting on a note, run
    `done_with_current_task.sh` before accepting any other handoff.
-8. If `done_with_current_task.sh` prints `TASK: <path>`, treat the printed
-   `PAYLOAD` as the next task.
-9. If `done_with_current_task.sh` prints `NO_TASK`, stop waiting for work.
+11. If a done helper prints `TASK: <path>`, treat the printed `PAYLOAD` as the
+   next task.
+12. If a done helper prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as
+   part of the next batch in helper-delivered order.
+13. If a done helper prints `NO_TASK`, stop waiting for work.
 
 On restart, an agent should run `ready_for_next_task.sh` and follow its output.
 
@@ -406,7 +451,9 @@ Lifecycle ownership:
   `created_at`.
 - `handoffd` writes `recipient` and `enqueued_at` into each recipient copy.
 - `ready_for_next_task.sh` writes `dequeued_at`.
+- `ready_for_next_batch.sh` writes `dequeued_at`.
 - `done_with_current_task.sh` writes `completed_at`.
+- `done_with_current_batch.sh` writes `completed_at`.
 
 ## Daemon Shutdown
 
@@ -454,6 +501,8 @@ Expected changes:
   - `swarm_handoff.sh`
   - `ready_for_next_task.sh`
   - `done_with_current_task.sh`
+  - `ready_for_next_batch.sh`
+  - `done_with_current_batch.sh`
   - `handoffd`
 - Update role and constitution prompts to describe the new inbox workflow.
 - Remove prompt instructions that require agents to send tmux notifications.

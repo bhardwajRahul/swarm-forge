@@ -6,6 +6,8 @@
   - `awake`
   - `git_handoff`
   - `note`
+- Do not send `note` handoffs unless the user, role prompt, constitution, or
+  current task explicitly directs you to send one.
 - For `awake`, write:
 
 ```text
@@ -42,11 +44,16 @@ message: <one line, max 80 chars>
 
 ## Receiving Handoffs
 - When notified, run `ready_for_next_task.sh`.
+- Use `ready_for_next_batch.sh` only when the user, role prompt,
+  constitution, or current task explicitly directs you to process a batch.
 - If it prints `NO_TASK`, stop waiting for work.
 - If it prints `TASK: <path>`, treat the printed `PAYLOAD` as the task.
+- If it prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as part of the
+  current batch in helper-delivered order.
 - Use only the task information printed by the helper scripts.
 - If a tmux wake-up arrives while already working on a task, ignore it.
 - When the task is fully complete, run `done_with_current_task.sh`.
+- When a batch is fully complete, run `done_with_current_batch.sh`.
 - `note` handoffs are tasks too; after reading or acting on a note, run `done_with_current_task.sh` before accepting any other handoff.
 - If `done_with_current_task.sh` prints `TASK: <path>`, treat the printed `PAYLOAD` as the next task.
 - If `done_with_current_task.sh` prints `NO_TASK`, stop waiting for work.

@@ -18,6 +18,10 @@ Agents interact with handoffs through helper scripts:
   sender, type, priority, and payload.
 - `done_with_current_task.sh` completes the current task and then delegates to
   `ready_for_next_task.sh`.
+- `ready_for_next_batch.sh` accepts all queued tasks at the next available
+  priority as one explicit batch.
+- `done_with_current_batch.sh` completes the current batch and then delegates to
+  `ready_for_next_batch.sh`.
 
 The durable handoff files and their audit timestamps replace the old logbook and
 direct tmux handoff strategy. See [swarmforge/handoff-protocol.md](swarmforge/handoff-protocol.md)

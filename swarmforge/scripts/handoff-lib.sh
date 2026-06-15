@@ -147,6 +147,34 @@ handoff_print_task() {
   handoff_body "$file"
 }
 
+handoff_print_batch() {
+  local batch_dir="$1"
+  local -a files
+  local priority
+
+  files=("$batch_dir"/*.handoff(N))
+  files=("${(@on)files}")
+
+  if (( ${#files[@]} == 0 )); then
+    echo "AMBIGUOUS_TASK_STATE: batch contains no tasks: $batch_dir" >&2
+    return 2
+  fi
+
+  priority="$(handoff_header_field priority "${files[1]}" || echo "50")"
+
+  echo "BATCH: $batch_dir"
+  echo "COUNT: ${#files[@]}"
+  echo "PRIORITY: $priority"
+
+  local file index=1
+  for file in "${files[@]}"; do
+    echo
+    echo "BATCH_ITEM: $index"
+    handoff_print_task "$file"
+    index=$((index + 1))
+  done
+}
+
 handoff_next_sequence() {
   local dir seq_file last next
   dir="$(handoff_state_dir)"
