@@ -60,7 +60,8 @@ Rules:
 - Lower priority numbers are processed first.
 - `priority` is two digits from `00` through `99`.
 - `timestamp` is UTC in `YYYYMMDDTHHMMSSZ` format.
-- `sequence` breaks ties for handoffs created in the same second.
+- `sequence` is a per-worktree counter that breaks ties for handoffs created
+  in the same second.
 - Recipients remain in the filename for audit.
 - Structural filename fields are separated with underscores.
 - Scripts parse authoritative metadata from file headers, not from the filename.
@@ -72,10 +73,21 @@ Rules:
 Handoff files use a simple header block, a blank line, and a generated body.
 Scripts may update headers, but the body is opaque after creation.
 
+The `id` header is globally audit-oriented and should include timestamp,
+sequence, and sender:
+
+```text
+<timestamp>_<sequence>_from_<sender>
+```
+
+Including the sender prevents otherwise identical timestamp/sequence pairs from
+colliding across worktrees. The sequence update must be serialized inside each
+worktree so concurrent handoff creation cannot reuse the same sequence.
+
 Example delivered handoff:
 
 ```text
-id: 20260615T140531Z-000042
+id: 20260615T140531Z_000042_from_coder
 from: coder
 to: cleaner
 recipient: cleaner
@@ -191,6 +203,8 @@ Responsibilities:
 - Infer `from` from the current agent/worktree.
 - Validate `to` against configured agents.
 - Generate `id`, `created_at`, filename timestamp, and sequence.
+- Serialize sequence updates with an atomic lock so concurrent handoff creation
+  in one worktree cannot reuse the same sequence.
 - Validate `priority` as `00` through `99`.
 - Validate `type` as `awake`, `git_handoff`, or `note`.
 - Validate `git_handoff` commits as real, unambiguous commits.

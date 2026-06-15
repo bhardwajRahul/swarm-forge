@@ -176,10 +176,16 @@ handoff_print_batch() {
 }
 
 handoff_next_sequence() {
-  local dir seq_file last next
+  local dir seq_file lock_dir last next
   dir="$(handoff_state_dir)"
   mkdir -p "$dir"
   seq_file="$dir/sequence"
+  lock_dir="$dir/sequence.lock"
+
+  while ! mkdir "$lock_dir" 2>/dev/null; do
+    sleep 0.05
+  done
+
   if [[ -f "$seq_file" ]]; then
     last="$(< "$seq_file")"
   else
@@ -190,5 +196,6 @@ handoff_next_sequence() {
   fi
   next=$((last + 1))
   printf '%06d\n' "$next" > "$seq_file"
+  rmdir "$lock_dir"
   printf '%06d' "$next"
 }
