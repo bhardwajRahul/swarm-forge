@@ -111,6 +111,21 @@
       (finally
         (fs/delete-tree root)))))
 
+(deftest swarmforge-uses-portable-tmux-socket-dir
+  (let [root (tmp-dir)]
+    (try
+      (write-file (fs/path root "swarmforge/constitution.prompt")
+                  "Read articles.\n")
+      (write-file (fs/path root "swarmforge/swarmforge.conf")
+                  "window coder codex master\n")
+      (write-file (fs/path root "swarmforge/roles/coder.prompt") "coder\n")
+      (run {:dir root} (script "swarmforge.bb") "--test-parse" (str root))
+      (let [socket-path (str/trim (slurp (str (fs/path root ".swarmforge/tmux-socket"))))]
+        (is (str/starts-with? socket-path "/tmp/swarmforge-"))
+        (is (not (str/starts-with? socket-path "/private/tmp/"))))
+      (finally
+        (fs/delete-tree root)))))
+
 (deftest swarmforge-launcher-rejects-invalid-config
   (let [root (tmp-dir)]
     (try

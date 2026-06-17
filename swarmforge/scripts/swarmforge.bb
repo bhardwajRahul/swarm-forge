@@ -421,7 +421,7 @@
         crc (java.util.zip.CRC32.)
         _ (.update crc (.getBytes (str working-dir) java.nio.charset.StandardCharsets/UTF_8))
         socket-id (str (.getValue crc))
-        tmux-socket-dir (fs/path "/private/tmp" (str "swarmforge-" (or (System/getenv "UID") (System/getProperty "user.name"))))
+        tmux-socket-dir (fs/path "/tmp" (str "swarmforge-" (or (System/getenv "UID") (System/getProperty "user.name"))))
         tmux-socket (str (fs/path tmux-socket-dir (str socket-id ".sock")))]
     {:working-dir working-dir
      :script-dir script-dir
