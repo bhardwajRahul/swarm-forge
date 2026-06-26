@@ -222,10 +222,27 @@
                         "grok")
             command (:out result)]
         (is (str/includes? command "grok --cwd "))
+        (is (str/includes? command "--permission-mode acceptEdits"))
         (is (str/includes? command "--rules \"$(cat "))
         (is (str/includes? command "--verbatim \"$(cat "))
         (is (str/includes? command ".swarmforge/prompts/coder.md"))
         (is (fs/exists? (fs/path root ".swarmforge/prompts/coder.md"))))
+      (finally
+        (fs/delete-tree root)))))
+
+(deftest grok-launch-command-uses-bypass-permissions-with-always-approve
+  (let [root (tmp-dir)]
+    (try
+      (let [result (run {:dir root}
+                        (script "swarmforge.bb")
+                        "--test-launch-command"
+                        (str root)
+                        "grok"
+                        "--always-approve")
+            command (:out result)]
+        (is (str/includes? command "--permission-mode bypassPermissions"))
+        (is (str/includes? command "--always-approve"))
+        (is (not (str/includes? command "--permission-mode acceptEdits"))))
       (finally
         (fs/delete-tree root)))))
 
